@@ -1,0 +1,86 @@
+{
+   "ietf-mud:mud": {
+     "mud-version": 1,
+     "mud-url": "https://bms.example.com/.well-known/mud/lightbulb2000",
+     "last-update": "2018-01-23T13:33:52+01:00",
+     "cache-validity": 48,
+     "is-supported": true,
+     "systeminfo": "The BMS Example Lightbulb",
+     "from-device-policy": {
+       "access-lists": {
+         "access-list": [
+           {
+             "name": "mud-45782-v6fr"
+           }
+         ]
+       }
+     },
+     "to-device-policy": {
+       "access-lists": {
+         "access-list": [
+           {
+             "name": "mud-45782-v6to"
+           }
+         ]
+       }
+     }
+   },
+   "ietf-access-control-list:access-lists": {
+     "acl": [
+       {
+         "name": "mud-45782-v6to",
+         "acl-type": "ipv6-acl-type",
+         "access-list-entries": {
+           "ace": [
+             {
+               "rule-name": "cl0-todev",
+               "matches": {
+                 "ipv6-acl": {
+                   "ietf-acldns:src-dnsname": "service.bms.example.com",
+                   "protocol": 6,
+                   "source-port-range-or-operator": {
+                     "operator": "eq",
+                     "port": 443
+                   }
+                 },
+                 "tcp": {
+                   "ietf-mud:direction-initiated": "from-device"
+                 }
+               },
+               "actions": {
+                 "forwarding": "accept"
+               }
+             }
+           ]
+         }
+       },
+       {
+         "name": "mud-45782-v6fr",
+         "acl-type": "ipv6-acl-type",
+         "access-list-entries": {
+           "ace": [
+             {
+               "rule-name": "cl0-frdev",
+               "matches": {
+                 "ipv6-acl": {
+                   "ietf-acldns:dst-dnsname": "service.bms.example.com",
+                   "protocol": 6,
+                   "destination-port-range-or-operator": {
+                     "operator": "eq",
+                     "port": 443
+                   }
+                 },
+                 "tcp": {
+                   "ietf-mud:direction-initiated": "from-device"
+                 }
+               },
+               "actions": {
+                 "forwarding": "accept"
+               }
+             }
+           ]
+         }
+       }
+     ]
+   }
+ }

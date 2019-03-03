@@ -1,0 +1,3 @@
+google.com danielB 192.168.1.100 5c:51:4f:cc:bb:aa
+amazon.com amazon-4e81f42b8 192.168.1.101 fc:65:de:cc:bb:aa
+ring.com RingPro-f8 192.168.1.102 e0:4f:43:cc:bb:aa

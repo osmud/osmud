@@ -1,0 +1,59 @@
+#!/bin/sh /etc/rc.common
+
+# Copyright 2018 osMUD
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+START=50
+NAME=osmud
+PROG=/usr/bin/osmud
+
+DNS_FILE_NAME_WITH_PATH="/var/state/osmud/dnswhitelist"
+MUD_FILE_DIRECTORY="/var/state/osmud/mudfiles"
+BASECONFIGFILE="/etc/osmud.conf"
+DHCP_EVENT_FILE="/var/log/dhcpmasq.txt"
+PID_FILE="/var/run/osmud.pid"
+OSMUD_LOG_FILE="/var/log/osmud.log"
+
+boot() {
+        mkdir -p /var/run
+        mkdir -p /var/log
+        mkdir -p /var/lock
+        mkdir -p /var/state/osmud/mudfiles
+        mkdir -p /var/tmp
+        touch /var/log/dhcpmasq.txt
+}
+
+start_service() {
+	$PROG -x $PID_FILE -e $DHCP_EVENT_FILE -w $DNS_FILE_NAME_WITH_PATH -b $MUD_FILE_DIRECTORY -l $OSMUD_LOG_FILE
+}
+
+start() {
+        mkdir -p /var/run
+        mkdir -p /var/log
+        mkdir -p /var/lock
+        mkdir -p /var/state/osmud/mudfiles
+        mkdir -p /var/tmp
+        touch /var/log/dhcpmasq.txt
+
+        start_service
+}
+
+stop() {
+	service_stop /usr/bin/osmud
+}
+
+reload() {
+	service_reload /usr/bin/osmud
+}

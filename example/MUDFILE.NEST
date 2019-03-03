@@ -1,0 +1,234 @@
+
+{
+  "ietf-mud:mud": {
+    "mud-url": "https://mplaunchpad.com/.well-known/mud/v1/nest",
+    "last-update": "2017-12-09T05:52:54+01:00",
+    "cache-validity": 48,
+    "is-supported": true,
+    "systeminfo": "https://en.wikipedia.org/wiki/Nest_learning_thermostat",
+    "from-device-policy": {
+      "access-lists": {
+        "access-list": [
+          {
+            "acl-name": "mud-74378-v4fr",
+            "acl-type": "ietf-access-control-list:ipv4-acl"
+          },
+          {
+            "acl-name": "mud-74378-v6fr",
+            "acl-type": "ietf-access-control-list:ipv6-acl"
+          }
+        ]
+      }
+    },
+    "to-device-policy": {
+      "access-lists": {
+        "access-list": [
+          {
+            "acl-name": "mud-74378-v4to",
+            "acl-type": "ietf-access-control-list:ipv4-acl"
+          },
+          {
+            "acl-name": "mud-74378-v6to",
+            "acl-type": "ietf-access-control-list:ipv6-acl"
+          }
+        ]
+      }
+    }
+  },
+  "ietf-access-control-list:access-lists": {
+    "acl": [
+      {
+        "acl-name": "mud-74378-v4to",
+        "acl-type": "ipv4-acl",
+        "aces": {
+          "ace": [
+            {
+              "rule-name": "cl0-todev",
+              "matches": {
+                "ipv4-acl": {
+                  "ietf-acldns:src-dnsname": "nest.com",
+                  "protocol": 6,
+                  "source-port-range": {
+                    "lower-port": 9543,
+                    "upper-port": 9543
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "rule-name": "myctl0-todev",
+              "matches": {
+                "ietf-mud:mud-acl": {
+                  "my-controller": [
+                    null
+                  ]
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "rule-name": "myman0-todev",
+              "matches": {
+                "ietf-mud:same-manufacturer": [
+                  null
+                ]
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "acl-name": "mud-74378-v4fr",
+        "acl-type": "ipv4-acl",
+        "aces": {
+          "ace": [
+            {
+              "rule-name": "cl0-frdev",
+              "matches": {
+                "ipv4-acl": {
+                  "ietf-acldns:dst-dnsname": "nest.com",
+                  "protocol": 6,
+                  "destination-port-range": {
+                    "lower-port": 9543,
+                    "upper-port": 9543
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "rule-name": "myctl0-frdev",
+              "matches": {
+                "ietf-mud:mud-acl": {
+                  "my-controller": [
+                    null
+                  ]
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "rule-name": "myman0-frdev",
+              "matches": {
+                "ietf-mud:same-manufacturer": [
+                  null
+                ]
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "acl-name": "mud-74378-v6to",
+        "acl-type": "ipv6-acl",
+        "access-list-entries": {
+          "ace": [
+            {
+              "rule-name": "cl0-todev",
+              "matches": {
+                "ipv6-acl": {
+                  "ietf-acldns:src-dnsname": "nest.com",
+                  "protocol": 6,
+                  "source-port-range": {
+                    "lower-port": 9543,
+                    "upper-port": 9543
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "rule-name": "myctl0-todev",
+              "matches": {
+                "ietf-mud:mud-acl": {
+                  "my-controller": [
+                    null
+                  ]
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "rule-name": "myman0-todev",
+              "matches": {
+                "ietf-mud:same-manufacturer": [
+                  null
+                ]
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "acl-name": "mud-74378-v6fr",
+        "acl-type": "ipv6-acl",
+        "access-list-entries": {
+          "ace": [
+            {
+              "rule-name": "cl0-frdev",
+              "matches": {
+                "ipv6-acl": {
+                  "ietf-acldns:dst-dnsname": "nest.com",
+                  "protocol": 6,
+                  "destination-port-range": {
+                    "lower-port": 9543,
+                    "upper-port": 9543
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "rule-name": "myctl0-frdev",
+              "matches": {
+                "ietf-mud:mud-acl": {
+                  "my-controller": [
+                    null
+                  ]
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "rule-name": "myman0-frdev",
+              "matches": {
+                "ietf-mud:same-manufacturer": [
+                  null
+                ]
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
