@@ -17,17 +17,17 @@
 #define _OMS_MESSAGES
 
 typedef struct {
-	int messageIndex;
-	int severity;
-	char *messageText;
+    int messageIndex;
+    int severity;
+    char *messageText;
 } omsMessage;
 
 enum OMS_SEVERITY_CLASSES {
-	OMS_CRIT = 1,
-	OMS_ERROR = 2,
-	OMS_WARN = 3,
-	OMS_INFO = 4,
-	OMS_DEBUG = 5
+    OMS_CRIT = 1,
+    OMS_ERROR = 2,
+    OMS_WARN = 3,
+    OMS_INFO = 4,
+    OMS_DEBUG = 5
 };
 
 // Allow the caller to identify the OMS subsystem when creating a message

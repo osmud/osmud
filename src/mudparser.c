@@ -28,18 +28,18 @@
 
 
 AclEntry *getMudFileAcl(char *aclName, MudFileInfo *mudFile) {
-	int i;
-	AclEntry *locatedAcl = (AclEntry *)0;
+    int i;
+    AclEntry *locatedAcl = (AclEntry *)0;
 
-	if (!aclName) {
-		return (AclEntry *)0;
-	}
+    if (!aclName) {
+        return (AclEntry *)0;
+    }
 
     for (i = 0; i < mudFile->aclListCount; i++) {
-    	if (!strcmp(mudFile->acls[i].aclName, aclName)) {
-    		locatedAcl = &(mudFile->acls[i]);
-    		break;
-    	}
+        if (!strcmp(mudFile->acls[i].aclName, aclName)) {
+            locatedAcl = &(mudFile->acls[i]);
+            break;
+        }
     }
 
     return locatedAcl;
@@ -186,13 +186,13 @@ void processJson(json_object *jobj, char *context, int level, int state, MudFile
                 break;
             case json_type_array:
                 if (!strcmp(key, IETF_SAME_MANUFACTURER)) {
-                	mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = SAME_MANUFACTURER;
+                    mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = SAME_MANUFACTURER;
                 } else if (!strcmp(key, IETF_MY_CONTROLLER)) {
-                	mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = MY_CONTROLLER;
+                    mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = MY_CONTROLLER;
                 } else if (!strcmp(key, IETF_CONTROLLER)) {
-                	mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = CONTROLLER;
+                    mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = CONTROLLER;
                 } else if (!strcmp(key, IETF_LOCAL_NETWORKS)) {
-                	mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = LOCAL_NETWORK;
+                    mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = LOCAL_NETWORK;
                 }
 
                 char *foo = copystring(json_object_get_string(val));
@@ -220,7 +220,7 @@ void processJson(json_object *jobj, char *context, int level, int state, MudFile
 }
 
 void freeMudFileInfo(MudFileInfo *mfi) {
-	int i,j;
+    int i,j;
 
     safe_free(mfi->description);
     safe_free(mfi->mudVersion);
@@ -281,7 +281,7 @@ MudFileInfo *createMfi() {
     mfi->fromAccessListCount = 0;
     mfi->aclListCount = 0;
 
-	int i,j;
+    int i,j;
 
     for (i = 0; i < MAX_DEVICE_POLICIES; i++) {
         mfi->fromAccessList[i].aclName = (char *)0;
@@ -299,7 +299,7 @@ MudFileInfo *createMfi() {
         mfi->acls[i].aceCount = 0;
 
         for (j = 0; j < MAX_ACES; j++) {
-        	mfi->acls[i].aceList[j].aceType = UNKNOWN;
+            mfi->acls[i].aceList[j].aceType = UNKNOWN;
             mfi->acls[i].aceList[j].actionsForwarding = (char *)0;
             mfi->acls[i].aceList[j].dnsName = (char *)0;
             mfi->acls[i].aceList[j].lowerPort = (char *)0;
@@ -315,7 +315,7 @@ MudFileInfo *createMfi() {
 
 MudFileInfo* parseMudFile(char *mudFileWithPath) {
 
-	MudFileInfo *mfi = createMfi();
+    MudFileInfo *mfi = createMfi();
 
     char * string = readFileToString(mudFileWithPath);
     json_object * jobj = json_tokener_parse(string);

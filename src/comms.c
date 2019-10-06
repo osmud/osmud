@@ -22,9 +22,9 @@
 extern int noFailOnMudValidation;
 
 typedef struct {
-	char *fileName;
-	FILE *outputFile;
-	int data;
+    char *fileName;
+    FILE *outputFile;
+    int data;
 } CurlOptions;
 
 /**
@@ -33,10 +33,10 @@ typedef struct {
  */
 size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp)
 {
-	CurlOptions *p = (CurlOptions *)userp;
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_COMMUNICATION, "in write data");
+    CurlOptions *p = (CurlOptions *)userp;
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_COMMUNICATION, "in write data");
 
-	return fwrite(buffer, size, nmemb, p->outputFile);
+    return fwrite(buffer, size, nmemb, p->outputFile);
 }
 
 int getOpenMudFile(char *mudFile, char *outputFile)
@@ -52,9 +52,9 @@ int getOpenMudFile(char *mudFile, char *outputFile)
 
   curl = curl_easy_init();
   if(curl) {
-	curlData.fileName = outputFile;
-	curlData.outputFile = fopen(outputFile, "w");
-	curlData.data = 1;
+    curlData.fileName = outputFile;
+    curlData.outputFile = fopen(outputFile, "w");
+    curlData.data = 1;
 
     curl_easy_setopt(curl, CURLOPT_URL, mudFile);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
@@ -64,9 +64,9 @@ int getOpenMudFile(char *mudFile, char *outputFile)
     // This is for debugging only and should not be on in a production setting.
     // Additionally, this will be removed from a future release.
     if (noFailOnMudValidation)
-    	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     else
-    	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
 
     struct curl_slist *headers=NULL;
     headers = curl_slist_append(headers, "Accept: application/mud+json");
@@ -80,9 +80,9 @@ int getOpenMudFile(char *mudFile, char *outputFile)
 
     if(retval != CURLE_OK) {
         sprintf(message, "curl_easy_perform() failed: %s\n", curl_easy_strerror(retval));
-		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_COMMUNICATION, message);
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_COMMUNICATION, message);
     } else {
-		logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_COMMUNICATION, "curl_easy_perform() success");
+        logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_COMMUNICATION, "curl_easy_perform() success");
     }
 
     /* always cleanup */
