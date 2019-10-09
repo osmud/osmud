@@ -249,7 +249,7 @@ void logInitialSettings()
     sprintf(msgBuf, "    MUD file storage directory: %s", mudFileDataDirectory);
     logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_GENERAL, msgBuf);
 
-    sprintf(msgBuf, "    sMUD startup configuration file: %s", osmudConfigFile);
+    sprintf(msgBuf, "    osMUD startup configuration file: %s", osmudConfigFile);
     logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_GENERAL, msgBuf);
 
     sprintf(msgBuf, "    osMUD logger path and file: %s", osMudLogFile);
