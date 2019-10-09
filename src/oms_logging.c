@@ -14,6 +14,7 @@
  */
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include <time.h>
 #include "oms_messages.h"
@@ -70,6 +71,7 @@ const char* getSubsystemText(enum OMS_SUBSYSTEM_CLASSES subsystem)
           case OMS_SUBSYS_COMMUNICATION: return "COMMUNICATION";
           case OMS_SUBSYS_MUD_FILE: return "MUD_FILE_OPERATIONS";
           case OMS_SUBSYS_DEVICE_INTERFACE: return "DEVICE_INTERFACE";
+          case OMS_SUBSYS_SNIFFER: return "SNIFFER";
           default: return "UNKNOWN";
    }
 }
@@ -108,16 +110,23 @@ void logOmsMessage(int severity, int omsSubsystem, int msgId)
     }
 }
 
-void logOmsGeneralMessage(int severity, int omsSubsystem, char * messageText)
+void logOmsGeneralMessage(int severity, int omsSubsystem, char *message_fmt, ...)
 {
+    char print_buf[2048];
+    va_list args;
+
     if (severity <= omsLogLevel) {
         time_t ltime;
         ltime=time(NULL);
         struct tm *tm;
         tm=localtime(&ltime);
 
+        va_start(args, message_fmt);
+	    vsprintf(print_buf, message_fmt, args);
+	    va_end(args);
+
         fprintf(logFile, "%04d-%02d-%02d %02d:%02d:%02d %s::%s::%s\n", tm->tm_year+1900, tm->tm_mon,
-                tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, getSeverityText(severity), getSubsystemText(omsSubsystem), messageText);
+                tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, getSeverityText(severity), getSubsystemText(omsSubsystem), print_buf);
         fflush(logFile);
     }
 }

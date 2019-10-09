@@ -32,7 +32,7 @@ define Package/osmud
   SECTION:=net
   CATEGORY:=Base system
   TITLE:=OpenWRT osmud
-  DEPENDS:=+libcurl +ca-bundle +libjson-c +openssl-util +ca-certificates
+  DEPENDS:=+libcurl +ca-bundle +libjson-c +openssl-util +ca-certificates +libpcap +libpthread
 #NEED TO ADD SOMETHING ABOUT osmud-dnsmasq and copy osmud-dnsmasq based on dnsmasq
 endef
 

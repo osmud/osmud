@@ -36,11 +36,12 @@ enum OMS_SUBSYSTEM_CLASSES {
  OMS_SUBSYS_CONTROLLER,
  OMS_SUBSYS_COMMUNICATION,
  OMS_SUBSYS_MUD_FILE,
- OMS_SUBSYS_DEVICE_INTERFACE
+ OMS_SUBSYS_DEVICE_INTERFACE,
+ OMS_SUBSYS_SNIFFER
 };
 
 void logOmsMessage(int severity, int omsSubsystem, int msgId);
-void logOmsGeneralMessage(int severity, int omsSubsystem, char *messageText);
+void logOmsGeneralMessage(int severity, int omsSubsystem, char *message_fmt, ...);
 void setOmsLogger(FILE *loggerFd);
 void setLoggingLevel(int logLevel);
 int getLogLevelFromArg(char *logLevel);
