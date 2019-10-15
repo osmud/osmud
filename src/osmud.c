@@ -31,6 +31,7 @@
 #include "dhcp_event.h"
 #include "mud_manager.h"
 #include "version.h"
+#include "sniffer.h"
 
 #define MAXLINE 1024
 
@@ -374,13 +375,21 @@ int main(int argc, char* argv[])
         chdir("/tmp");
     }
 
-
     // Close stdin. stdout and stderr
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, "Initializing sniffer module");
+    if (!sniffer_init())
+    {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_GENERAL, "Failed to initialize sniffer module");
+        exit(1);
+    }
+
     doProcessLoop(filed);
+
+    sniffer_free();
 
     close(filed);
     fclose(logger);

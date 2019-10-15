@@ -1,0 +1,49 @@
+# Intellij
+.idea/
+*.iml
+*.iws
+atlassian-ide-plugin.xml
+
+.cache/
+
+.pytest_cache/
+*/.pytest_cache/
+.test_results/
+
+# Visual Studio
+*.opensdf
+*.sdf
+*.suo
+storage/repos/
+storage/uploads/
+.tags
+settings.json
+
+# Emacs
+*~
+storage/reports/
+
+# Visual Studio Code
+.tags
+settings.json
+.vscode/ipch/
+
+# Ansible
+*.retry
+
+# venv
+venv*
+
+
+# swagger files
+management/rest_server/docs/public
+*.pdb
+*.idb
+*.lastbuildstate
+*.tlog
+*.db
+*.rej
+*.ipch
+
+# virtual env
+venv
