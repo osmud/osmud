@@ -53,11 +53,13 @@ openwrt.o:      openwrt/openwrt.c
 testDevice.o:      sampleDevice/testDevice.c
 	$(CC) $(CFLAGS) -c -o testDevice.o sampleDevice/testDevice.c
 
-osmud:	 osmud.o comms.o oms_utils.o oms_logging.o dhcp_event.o openwrt.o mudparser.o mud_manager.o version.o sniffer.o
-	$(CC) $(CFLAGS) $(LDFLAGS) osmud.o comms.o oms_utils.o oms_logging.o dhcp_event.o openwrt.o mudparser.o mud_manager.o version.o sniffer.o -o osmud -ljson-c -lcurl -lpcap -lpthread
+osmud:	 osmud.o comms.o oms_utils.o oms_logging.o dhcp_event.o openwrt.o mudparser.o mud_manager.o version.o sniffer.o ip_dissect.o dns_dissect.o common.o
+	$(CC) $(CFLAGS) $(LDFLAGS) osmud.o comms.o oms_utils.o oms_logging.o dhcp_event.o openwrt.o mudparser.o mud_manager.o \
+	version.o sniffer.o ip_dissect.o dns_dissect.o common.o -o osmud -ljson-c -lcurl -lpcap -lpthread
 
-osmud-generic:	 osmud.o comms.o oms_utils.o oms_logging.o dhcp_event.o testDevice.o mudparser.o mud_manager.o version.o sniffer.o
-	$(CC) $(CFLAGS) $(LDFLAGS) osmud.o comms.o oms_utils.o oms_logging.o dhcp_event.o testDevice.o mudparser.o mud_manager.o version.o sniffer.o -o osmud -ljson-c -lcurl -lpcap -lpthread
+osmud-generic:	 osmud.o comms.o oms_utils.o oms_logging.o dhcp_event.o testDevice.o mudparser.o mud_manager.o version.o sniffer.o ip_dissect.o dns_dissect.o common.o
+	$(CC) $(CFLAGS) $(LDFLAGS) osmud.o comms.o oms_utils.o oms_logging.o dhcp_event.o testDevice.o mudparser.o mud_manager.o
+	version.o sniffer.o ip_dissect.o dns_dissect.o common.o -o osmud -ljson-c -lcurl -lpcap -lpthread
  
 # To clean build artifacts, we specify a 'clean' rule, and use PHONY to indicate that this rule never matches with a potential file in the directory
 .PHONY: clean

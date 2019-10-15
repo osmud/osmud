@@ -72,6 +72,7 @@ const char* getSubsystemText(enum OMS_SUBSYSTEM_CLASSES subsystem)
           case OMS_SUBSYS_MUD_FILE: return "MUD_FILE_OPERATIONS";
           case OMS_SUBSYS_DEVICE_INTERFACE: return "DEVICE_INTERFACE";
           case OMS_SUBSYS_SNIFFER: return "SNIFFER";
+          case OMS_SUBSYS_DNSD: return "DNS_DISSECT";
           default: return "UNKNOWN";
    }
 }

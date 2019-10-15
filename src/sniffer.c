@@ -1,9 +1,18 @@
+#include <string.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <net/if.h>
 #include <pcap/pcap.h>
+#include <arpa/inet.h>
 
+#include "common.h"
 #include "sniffer.h"
+#include "ip_dissect.h"
+#include "dns_dissect.h"
 #include "oms_messages.h"
+
+#define DNS_OP_FMT(dns_packet)    ((0 == dns_packet->flags.query_or_response) ? "QUERY" :   \
+                                  ((1 == dns_packet->flags.query_or_response) ? "RESPONSE" :  "UNKNOWN" ))
 
 static pthread_t dns_thread;
 
@@ -20,9 +29,9 @@ static const char *filter =
 static char errbuf[PCAP_ERRBUF_SIZE] = {0};
 
 /* Command-line Args */
-static char intf[IFNAMSIZ] = { 'a', 'n', 'y', '\0' };
+static char intf[IFNAMSIZ] = { 'b', 'r', '-', 'l', 'a', 'n', '\0' };
 static int snaplen = 2048;
-static int timeout = 1000;
+static int timeout = 100;
 static int promisc = 0;
 static pcap_t *g_session = NULL;
 static int g_link_type = 0;
@@ -34,9 +43,64 @@ static void sniffer_free_pcap(void);
 static bool sniffer_create_thread(void);
 
 
-static void *dns_thread_func(void *arg)
+static void dns_record_debug(osm_dns_record_t *dns_record)
+{
+    uint32_t *ip = NULL;
+    struct in_addr ip_addr;
+
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_DNSD, "type: %s for query name %s",
+               osm_dnsdissect_get_type(dns_record->type), dns_record->name);
+
+    switch (dns_record->type)
+    {
+        case OSM_DNS_TYPE_A:
+            if (OSM_DNS_A_REC_LEN != dns_record->data.raw.data_len)
+            {
+                logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_DNSD, "A record len is %" FMT_SIZE_T ". should be %d.",
+                           dns_record->data.raw.data_len, OSM_DNS_A_REC_LEN);
+                return;
+            }
+            ip = (uint32_t *)dns_record->data.raw.data;
+            ip_addr.s_addr = *ip;
+            logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_DNSD, "%s", inet_ntoa(ip_addr));
+            break;
+
+        case OSM_DNS_TYPE_NS:
+        case OSM_DNS_TYPE_CNAME:
+        case OSM_DNS_TYPE_PTR:
+            logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_DNSD, "%s", dns_record->data.hostname);
+            break;
+    }
+}
+
+
+static void dns_pkt_debug(osm_dns_packet_t *dns_packet)
+{
+    unsigned int i;
+
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_DNSD, "new dns %s. id: %u, query count: %u, answer count: %u, authority: %u, additional: %u",
+               DNS_OP_FMT(dns_packet), dns_packet->id, dns_packet->num_queries, dns_packet->num_answers,
+               dns_packet->num_authority_records, dns_packet->num_additional_records);
+
+    for (i = 0; i < dns_packet->num_queries; i++)
+    {
+        logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_DNSD, "query %d: type: %s, name: %s", i + 1,
+                   osm_dnsdissect_get_type(dns_packet->queries[i].type), dns_packet->queries[i].name);
+    }
+    for (i = 0; i < dns_packet->num_answers; i++)
+    {
+        logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_DNSD, "answer %d:", i + 1);
+        dns_record_debug(&dns_packet->answers[i]);
+    }
+}
+
+
+
+static void *sniffer_thread_func(void *arg)
 {
     struct pcap_pkthdr *packet_hdr = NULL;
+    struct dispkt dpkt = {{{{{0}}}}};
+    osm_dns_packet_t *dns_packet = NULL;
 	const u_char *packet_data = NULL;
 	int i;
 
@@ -75,17 +139,31 @@ static void *dns_thread_func(void *arg)
 
         logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_SNIFFER, "got good packet");
 
-        /*
-        // Dissect the link/IP/IP_PROTO layers of the packet
-        if (dissect_ip_packet(link_type, packet_hdr, packet_data, &dpkt))
+        /* Dissect the link/IP/IP_PROTO layers of the packet */
+        if (!dissect_ip_packet(g_link_type, packet_hdr, packet_data, &dpkt))
         {
-            goto ret;
+            logOmsGeneralMessage(OMS_WARN, OMS_SUBSYS_SNIFFER, "Failed dissecting packet's IP");
+            continue;
         }
 
-        // Output a representation of the DNS payload
-        if (output_dns(&dpkt, packet_hdr))
-            goto ret;
-        */
+        dns_packet = calloc(1, sizeof(osm_dns_packet_t));
+        if (dns_packet == NULL)
+        {
+            logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_SNIFFER, "Failed to allocate dns packet struct");
+            continue;
+        }
+
+        /* Output a representation of the DNS payload */
+        if (!dissect_dns(dpkt.payload, dpkt.udp_payload_len, dns_packet))
+        {
+            logOmsGeneralMessage(OMS_WARN, OMS_SUBSYS_SNIFFER, "Failed dissecting packet's DNS");
+            goto free_continue;
+        }
+
+        dns_pkt_debug(dns_packet);
+
+free_continue:
+        free(dns_packet);
     }
 
     return NULL;
@@ -185,7 +263,7 @@ static bool sniffer_create_thread(void)
 {
     int ret;
 
-    ret = pthread_create(&dns_thread, NULL, &dns_thread_func, NULL);
+    ret = pthread_create(&dns_thread, NULL, &sniffer_thread_func, NULL);
     if(ret != 0)
     {
         logOmsGeneralMessage(OMS_CRIT, OMS_SUBSYS_SNIFFER, "Error creating sniffer thread: %d", ret);
