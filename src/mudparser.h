@@ -107,6 +107,8 @@
 #define PROTOCOL "protocol"
 #define DNS_NAME_SRC "ietf-acldns:src-dnsname"
 #define DNS_NAME_DST "ietf-acldns:dst-dnsname"
+#define NETWORK_SRC "source-ipv4-network"
+#define NETWORK_DST "destination-ipv4-network"
 #define DIRECTION_INITIATED "ietf-mud:direction-initiated"
 
 #define PORT "port"
@@ -144,13 +146,14 @@
 //#define IETF_MY_CONTROLLER "ietf-mud:my-controller"
 #define IETF_MY_CONTROLLER "my-controller"
 
-typedef enum {UNKNOWN,ACLDNS,SAME_MANUFACTURER,CONTROLLER,MY_CONTROLLER,LOCAL_NETWORK} ACE_TYPE;
+typedef enum {UNKNOWN,ACLDNS,ACLNETWORK,SAME_MANUFACTURER,CONTROLLER,MY_CONTROLLER,LOCAL_NETWORK} ACE_TYPE;
 
 typedef struct {
     ACE_TYPE aceType;
     char *ruleName;
     char *protocol;
     char *dnsName;
+    char *ipv4Network;
     char *lowerPort;
     char *upperPort;
     char *actionsForwarding;

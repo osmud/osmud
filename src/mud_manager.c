@@ -28,6 +28,7 @@
 
 #include <errno.h>
 
+#include "common.h"
 #include "comms.h"
 #include "oms_messages.h"
 #include "oms_utils.h"
@@ -68,6 +69,37 @@ int buildPortRange(char *portBuf, int portBufSize, AceEntry *ace)
     return retval;
 }
 
+static bool is_broadcast_multicast(const char *ipv4_network)
+{
+    char *cidr = NULL;
+    char *ip_wo_cidr = NULL;
+    bool ret = false;
+    struct in_addr addr = {0};
+
+    CHECK_NOT_NULL(ipv4_network, false);
+
+    cidr = strchr(ipv4_network, '/');
+    if (cidr != NULL)
+        ip_wo_cidr = osm_strndup(ipv4_network, (size_t)cidr - (size_t)ipv4_network);
+    else
+        ip_wo_cidr = osm_strdup(ipv4_network);
+
+    if (inet_aton(ip_wo_cidr, &addr) == 0)
+    {
+        logOmsGeneralMessage(OMS_CRIT, OMS_SUBSYS_DEVICE_INTERFACE, "ERROR: (%s) is not a valid ipv4", ip_wo_cidr);
+        goto out;
+    }
+
+    /* multicast */
+    ret = ((ntohl(addr.s_addr) & 0xf0000000) == (uint32_t)0xe0000000);
+    /* broadcast */
+    ret |= (ntohl(addr.s_addr) == (uint32_t)0xffffffff);
+
+out:
+    free(ip_wo_cidr);
+    return ret;
+}
+
 #define PORT_BUF_SIZE 512
 
 int processFromAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *event) {
@@ -83,7 +115,8 @@ int processFromAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *ev
     }
 
     for (i = 0; i < acl->aceCount; i++) {
-        if (acl->aceList[i].aceType == ACLDNS) {
+        if (acl->aceList[i].aceType == ACLDNS)
+        {
             logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_DEVICE_INTERFACE, "Applying *from* dns ace rule.");
 
             dnsInfo = resolveDnsEntryToIp(acl->aceList[i].dnsName);
@@ -95,14 +128,14 @@ int processFromAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *ev
             for (j = 0; j < dnsInfo->ipCount; j++) {
                 buildPortRange(portRangeBuffer, PORT_BUF_SIZE, &(acl->aceList[i]));
                 actionResult = installFirewallIPRule(event->ipAddress,
-                                                        dnsInfo->ipList[j],
-                                                        portRangeBuffer,
-                                                        LAN_DEVICE_NAME,
-                                                        WAN_DEVICE_NAME,
-                                                        acl->aceList[i].protocol,
-                                                        acl->aceList[i].ruleName,
-                                                        acl->aceList[i].actionsForwarding,
-                                                        aclType, event->hostName);
+                                                     dnsInfo->ipList[j],
+                                                     portRangeBuffer,
+                                                     LAN_DEVICE_NAME,
+                                                     WAN_DEVICE_NAME,
+                                                     acl->aceList[i].protocol,
+                                                     acl->aceList[i].ruleName,
+                                                     acl->aceList[i].actionsForwarding,
+                                                     aclType, event->hostName);
                 if (actionResult) {
                     logOmsGeneralMessage(OMS_CRIT, OMS_SUBSYS_DEVICE_INTERFACE, "Firewall rule installation failed");
                     actionResult = 0;
@@ -111,7 +144,36 @@ int processFromAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *ev
             }
 
             freeDnsInfo(dnsInfo);
-        } else {
+        }
+        else if (acl->aceList[i].aceType == ACLNETWORK)
+        {
+            logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_DEVICE_INTERFACE, "Applying *from* network rule.");
+            if (is_broadcast_multicast(acl->aceList[i].ipv4Network))
+            {
+                logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_DEVICE_INTERFACE, "Ignoring broadcast/multicast address: %s",
+                                     acl->aceList[i].ipv4Network);
+                continue;
+            }
+
+            buildPortRange(portRangeBuffer, PORT_BUF_SIZE, &(acl->aceList[i]));
+            actionResult = installFirewallIPRule(event->ipAddress,
+                                                 acl->aceList[i].ipv4Network,
+                                                 portRangeBuffer,
+                                                 LAN_DEVICE_NAME,
+                                                 WAN_DEVICE_NAME,
+                                                 acl->aceList[i].protocol,
+                                                 acl->aceList[i].ruleName,
+                                                 acl->aceList[i].actionsForwarding,
+                                                 aclType, event->hostName);
+            if (actionResult)
+            {
+                logOmsGeneralMessage(OMS_CRIT, OMS_SUBSYS_DEVICE_INTERFACE, "Firewall rule installation failed");
+                actionResult = 0;
+                retval = 1; /* Set flag to indicate at least one firewall rule installation failed */
+            }
+        }
+        else
+        {
             logOmsGeneralMessage(OMS_WARN, OMS_SUBSYS_DEVICE_INTERFACE, "Ignoring unimplemented *from* ace rule.");
             /* retval = 1;  -- right now, do not fail entire transaction for non-implemented MUD actions * It's an error situation */
         }
@@ -134,7 +196,8 @@ int processToAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *even
     }
 
     for (i = 0; i < acl->aceCount; i++) {
-        if (acl->aceList[i].aceType == ACLDNS) {
+        if (acl->aceList[i].aceType == ACLDNS)
+        {
             logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_DEVICE_INTERFACE, "Applying *to* dns ace rule.");
 
             dnsInfo = resolveDnsEntryToIp(acl->aceList[i].dnsName);
@@ -145,16 +208,16 @@ int processToAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *even
             // Need to install a firewall rule for each IP that resolves
             for (j = 0; j < dnsInfo->ipCount; j++) {
                 buildPortRange(portRangeBuffer, PORT_BUF_SIZE, &(acl->aceList[i]));
-                actionResult = installFirewallIPRule(dnsInfo->ipList[j],                     /* srcIp */
+                actionResult = installFirewallIPRule(dnsInfo->ipList[j],                      /* srcIp */
                                                         event->ipAddress,                     /* destIp */
-                                                        portRangeBuffer,                     /* destPort */
-                                                        WAN_DEVICE_NAME,                     /* srcDevice - lan or wan */
-                                                        LAN_DEVICE_NAME,                    /* destDevice - lan or wan */
+                                                        portRangeBuffer,                      /* destPort */
+                                                        WAN_DEVICE_NAME,                      /* srcDevice - lan or wan */
+                                                        LAN_DEVICE_NAME,                      /* destDevice - lan or wan */
                                                         acl->aceList[i].protocol,             /* protocol - tcp/udp */
                                                         acl->aceList[i].ruleName,             /* the name of the rule -- TODO: Better rule names by device name*/
                                                         acl->aceList[i].actionsForwarding,    /* ACCEPT or REJECT */
                                                         aclType,
-                                                        event->hostName                        /* hostname of the new device */ );
+                                                        event->hostName                       /* hostname of the new device */ );
                 if (actionResult) {
                     logOmsGeneralMessage(OMS_CRIT, OMS_SUBSYS_DEVICE_INTERFACE, "Firewall rule installation failed");
                     actionResult = 0;
@@ -163,7 +226,38 @@ int processToAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *even
             }
 
             freeDnsInfo(dnsInfo);
-        } else {
+        }
+        else if (acl->aceList[i].aceType == ACLNETWORK)
+        {
+            logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_DEVICE_INTERFACE, "Applying *to* network rule.");
+
+            if (is_broadcast_multicast(acl->aceList[i].ipv4Network))
+            {
+                logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_DEVICE_INTERFACE, "Ignoring broadcast/multicast address: %s",
+                                     acl->aceList[i].ipv4Network);
+                continue;
+            }
+
+            buildPortRange(portRangeBuffer, PORT_BUF_SIZE, &(acl->aceList[i]));
+            actionResult = installFirewallIPRule(acl->aceList[i].ipv4Network,          /* srcIp */
+                                                 event->ipAddress,                     /* destIp */
+                                                 portRangeBuffer,                      /* destPort */
+                                                 WAN_DEVICE_NAME,                      /* srcDevice - lan or wan */
+                                                 LAN_DEVICE_NAME,                      /* destDevice - lan or wan */
+                                                 acl->aceList[i].protocol,             /* protocol - tcp/udp */
+                                                 acl->aceList[i].ruleName,             /* the name of the rule -- TODO: Better rule names by device name*/
+                                                 acl->aceList[i].actionsForwarding,    /* ACCEPT or REJECT */
+                                                 aclType,
+                                                 event->hostName                       /* hostname of the new device */ );
+            if (actionResult)
+            {
+                logOmsGeneralMessage(OMS_CRIT, OMS_SUBSYS_DEVICE_INTERFACE, "Firewall rule installation failed");
+                actionResult = 0;
+                retval = 1; /* Set flag to indicate at least one firewall rule installation failed */
+            }
+        }
+        else
+        {
             logOmsGeneralMessage(OMS_WARN, OMS_SUBSYS_DEVICE_INTERFACE, "Ignoring unimplemented *to* ace rule.");
             /* retval = 1;  -- right now, do not fail entire transaction for non-implemented MUD actions * It's an error situation */
         }
