@@ -2,7 +2,7 @@
 #define _COMMON
 
 #include <stdio.h>
-
+#include <stdbool.h>
 
 #include "oms_messages.h"
 
@@ -38,5 +38,8 @@ size_t                    /* O - Length of string */
 strlcpy(char *dst,        /* O - Destination string */
         const char *src,  /* I - Source string */
         size_t size);     /* I - Size of destination string buffer */
+
+char *osm_strdup(const char *s);
+char *osm_strndup(const char *s, size_t n);
 
 #endif /* _COMMON */

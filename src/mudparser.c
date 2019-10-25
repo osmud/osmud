@@ -97,6 +97,12 @@ void process_string(char *key, json_object *val, char *context, MudFileInfo *mfi
         } else if (!strcmp(key, DNS_NAME_DST)) {
             mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = ACLDNS;
             mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].dnsName = copystring(json_object_get_string(val));
+        } else if (!strcmp(key, NETWORK_SRC)) {
+            mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = ACLNETWORK;
+            mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].ipv4Network = copystring(json_object_get_string(val));
+        } else if (!strcmp(key, NETWORK_DST)) {
+            mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].aceType = ACLNETWORK;
+            mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].ipv4Network = copystring(json_object_get_string(val));
         } else if (!strcmp(key, PORT)) {
             mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].upperPort = copystring(json_object_get_string(val));
             mfi->acls[mfi->aclListCount-1].aceList[mfi->acls[mfi->aclListCount-1].aceCount-1].lowerPort = copystring(json_object_get_string(val));
