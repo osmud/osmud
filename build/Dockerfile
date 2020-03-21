@@ -22,7 +22,7 @@ RUN set -ex \
     && apt-get install --no-install-recommends --no-install-suggests -y \
     subversion g++ zlib1g-dev build-essential git python rsync man-db \
     libncurses5-dev gawk gettext unzip file libssl-dev wget openssl \
-    ca-certificates libcurl4-openssl-dev vim libjson-c-dev pkg-config sudo \
+    ca-certificates libcurl4-openssl-dev vim libjson-c-dev pkg-config libglib2.0-dev sudo \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -m -s /bin/bash lede && echo "lede:lede" | chpasswd && adduser lede sudo
 
