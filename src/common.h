@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 #include "oms_messages.h"
 
@@ -19,18 +21,8 @@ do                                                              \
     }                                                           \
 } while (0)
 
-#define PRIu8 "hu"
-#define PRId8 "hd"
-#define PRIx8 "hx"
-#define PRIu16 "hu"
-#define PRId16 "hd"
-#define PRIx16 "hx"
-#define PRIu32 "u"
-#define PRId32 "d"
-#define PRIx32 "x"
-#define PRIu64 "llu"
-#define PRId64 "lld"
-#define PRIx64 "llx"
+#define FORMAT_IP "%d.%d.%d.%d"
+#define IP_TO_FORMAT(num)   ((num) >> 24) & 0xFF, ((num) >> 16) & 0xFF, ((num) >> 8) & 0xFF, ((num) >> 0) & 0xFF
 
 #define FMT_SIZE_T "zu"
 

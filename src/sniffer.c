@@ -10,6 +10,7 @@
 #include "ip_dissect.h"
 #include "dns_dissect.h"
 #include "oms_messages.h"
+#include "dns_rules.h"
 
 #define DNS_OP_FMT(dns_packet)    ((0 == dns_packet->flags.query_or_response) ? "QUERY" :   \
                                   ((1 == dns_packet->flags.query_or_response) ? "RESPONSE" :  "UNKNOWN" ))
@@ -161,6 +162,12 @@ static void *sniffer_thread_func(void *arg)
         }
 
         dns_pkt_debug(dns_packet);
+
+        /* install new rules if needed */
+        if ((dns_packet->flags.query_or_response == 1) &&
+            (dns_packet->num_queries == 1) &&
+            (dpkt.family == AF_INET))
+            dns_rules_lookup_and_install(dns_packet, dpkt.da.ip);
 
 free_continue:
         free(dns_packet);

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -35,6 +36,7 @@
 #include "dhcp_event.h"
 #include "mud_manager.h"
 #include "mudparser.h"
+#include "dns_rules.h"
 
 extern char *dnsWhiteListFile;
 extern int noFailOnMudValidation;
@@ -108,6 +110,7 @@ int processFromAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *ev
     int i, j;
     DomainResolutions *dnsInfo;
     char portRangeBuffer[PORT_BUF_SIZE];
+    dns_rule_data_t *dns_rule_data = NULL;
 
     if (!acl) {
         logOmsGeneralMessage(OMS_CRIT, OMS_SUBSYS_DEVICE_INTERFACE, "ERROR: NULL in *from* acl rule.");
@@ -123,6 +126,21 @@ int processFromAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *ev
 
             // Need to check a return code to make sure the rule got applied correctly
             installDnsRule(dnsInfo->domainName, event->ipAddress, event->macAddress, event->hostName, dnsWhiteListFile);
+
+            /* it is safe not to check the return val. g_malloc failure terminates the app. */
+            dns_rule_data = g_malloc(sizeof(dns_rule_data_t));
+
+            dns_rule_data->src_ip_addr = inet_addr(event->ipAddress);
+            dns_rule_data->lower_port = g_strdup(acl->aceList[i].lowerPort);
+            dns_rule_data->upper_port = g_strdup(acl->aceList[i].upperPort);
+            dns_rule_data->protocol = g_strdup(acl->aceList[i].protocol);
+            dns_rule_data->rule_name = g_strdup(acl->aceList[i].ruleName);
+            dns_rule_data->action = g_strdup(acl->aceList[i].actionsForwarding);
+            dns_rule_data->acl_type = g_strdup(aclType);
+            dns_rule_data->hostname = g_strdup(event->hostName);
+
+            /* adding the dns rule to the hash table */
+            dns_rules_add(dnsInfo->domainName, dns_rule_data);
 
             // Need to install a firewall rule for each IP that resolves
             for (j = 0; j < dnsInfo->ipCount; j++) {

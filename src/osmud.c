@@ -33,6 +33,7 @@
 #include "mud_manager.h"
 #include "version.h"
 #include "sniffer.h"
+#include "dns_rules.h"
 
 #define MAXLINE 1024
 
@@ -384,9 +385,17 @@ int main(int argc, char* argv[])
     close(STDERR_FILENO);
 
     logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, "Initializing sniffer module");
+
+    if (!dns_rules_init())
+    {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_GENERAL, "Failed to initialize dns rules module");
+        exit(1);
+    }
+
     if (!sniffer_init())
     {
         logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_GENERAL, "Failed to initialize sniffer module");
+        dns_rules_free();
         exit(1);
     }
 
