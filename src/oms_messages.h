@@ -38,7 +38,8 @@ enum OMS_SUBSYSTEM_CLASSES {
  OMS_SUBSYS_MUD_FILE,
  OMS_SUBSYS_DEVICE_INTERFACE,
  OMS_SUBSYS_SNIFFER,
- OMS_SUBSYS_DNSD
+ OMS_SUBSYS_DNSD,
+ OMS_SUBSYS_DNSR
 };
 
 void logOmsMessage(int severity, int omsSubsystem, int msgId);

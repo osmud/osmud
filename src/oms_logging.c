@@ -73,6 +73,7 @@ const char* getSubsystemText(enum OMS_SUBSYSTEM_CLASSES subsystem)
           case OMS_SUBSYS_DEVICE_INTERFACE: return "DEVICE_INTERFACE";
           case OMS_SUBSYS_SNIFFER: return "SNIFFER";
           case OMS_SUBSYS_DNSD: return "DNS_DISSECT";
+          case OMS_SUBSYS_DNSR: return "DNS_RULES";
           default: return "UNKNOWN";
    }
 }

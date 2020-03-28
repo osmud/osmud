@@ -111,6 +111,36 @@ int installFirewallIPRule(char *srcIp, char *destIp, char *destPort, char *srcDe
     return retval;
 }
 
+int installFirewallIPRulePortRange(char *srcIp, char *destIp, char *lowerPort, char *upperPort, char *srcDevice,
+        char *destDevice, char *protocol, char *ruleName, char *fwAction, char *aclType,
+        char *hostName)
+{
+    char execBuf[BUFSIZE];
+    int retval;
+
+    /* TODO: We need to turn srcDevice and destDevice into the real values on the router */
+    /*       by default they are "lan" and "wan" but can be changed. You can find this   */
+    /*       with command "uci show dhcp.lan.interface" ==> dhcp.lan.interface='lan'     */
+    /*       We should update the script to pull this value from UCI                     */
+    /*       EX: uci show dhcp.lan.interface | awk -F = '{print $2}'                     */
+    /* NOTE: Currently we are not restricting by source-port. If needed, add this as an arg */
+    snprintf(execBuf, BUFSIZE, "%s -s %s -d %s -i %s -a any -j %s -b %s:%s -p %s -n %s -t %s -f %s -c %s", UCI_FIREWALL_SCRIPT, srcDevice, destDevice, srcIp,
+            destIp, lowerPort, upperPort, getProtocolName(protocol),
+            ruleName,
+            getActionString(fwAction),
+            getProtocolFamily(aclType),
+            hostName);
+    execBuf[BUFSIZE-1] = '\0';
+
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+    retval = system(execBuf);
+
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
+    }
+    return retval;
+}
+
 int commitAndApplyFirewallRules()
 {
     int retval;
@@ -143,6 +173,24 @@ int removeFirewallIPRule(char *ipAddr, char *macAddress)
     int retval;
 
     snprintf(execBuf, BUFSIZE, "%s -i %s -m %s", UCI_FIREWALL_REMOVE_SCRIPT, ipAddr, macAddress);
+    execBuf[BUFSIZE-1] = '\0';
+
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+    retval = system(execBuf);
+
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
+    }
+    return retval;
+
+}
+
+int reorderFirewallRejectAllIPRule(char *ipAddr)
+{
+    char execBuf[BUFSIZE];
+    int retval;
+
+    snprintf(execBuf, BUFSIZE, "%s -i %s", UCI_FIREWALL_REORDER_REJECT_SCRIPT, ipAddr);
     execBuf[BUFSIZE-1] = '\0';
 
     logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);

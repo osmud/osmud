@@ -239,16 +239,16 @@ static bool osm_dns_parse_record(const u_char *udp_payload,
 }
 
 
-/**
-* Parse name inside of a DNS query or record.
-*
-* @param udp_payload entire UDP payload
-* @param udp_payload_length length of @a udp_payload
-* @param off pointer to the offset of the name to parse in the udp_payload (to be
-*                    incremented by the size of the name)
-* @param depth current depth of our recursion (to prevent stack overflow)
-* @return name as 0-terminated C string on success, NULL if the payload is malformed
-*/
+/*
+ * Parse name inside of a DNS query or record.
+ *
+ * @param udp_payload entire UDP payload
+ * @param udp_payload_length length of @a udp_payload
+ * @param off pointer to the offset of the name to parse in the udp_payload (to be
+ *                    incremented by the size of the name)
+ * @param depth current depth of our recursion (to prevent stack overflow)
+ * @return name as 0-terminated C string on success, NULL if the payload is malformed
+ */
 static bool parse_name(const u_char *udp_payload, size_t udp_payload_length, size_t *off,
                        unsigned int depth, char *name, uint64_t name_len, uint16_t *name_off)
 {

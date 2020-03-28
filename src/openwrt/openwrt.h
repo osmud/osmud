@@ -18,6 +18,7 @@
 
 #define UCI_FIREWALL_SCRIPT "/etc/osmud/create_ip_fw_rule.sh"
 #define UCI_FIREWALL_REMOVE_SCRIPT "/etc/osmud/remove_ip_fw_rule.sh"
+#define UCI_FIREWALL_REORDER_REJECT_SCRIPT "/etc/osmud/reorder_ip_fw_reject_all_rule.sh"
 
 #define MUD_DB_CREATE_SCRIPT "/etc/osmud/create_mud_db_entry.sh"
 #define MUD_DB_REMOVE_SCRIPT "/etc/osmud/create_mud_db_entry.sh"

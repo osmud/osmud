@@ -67,6 +67,7 @@ define Package/osmud/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/rollback_ip_fw_rules.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/create_ip_fw_rule.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/remove_ip_fw_rule.sh $(1)/etc/osmud
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/reorder_ip_fw_reject_all_rule.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/create_mud_db_entry.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/create_mud_db_entry.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dnsmasq/detect_new_device.sh $(1)/etc/osmud
