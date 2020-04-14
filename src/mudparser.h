@@ -107,6 +107,8 @@
 #define PROTOCOL "protocol"
 #define DNS_NAME_SRC "ietf-acldns:src-dnsname"
 #define DNS_NAME_DST "ietf-acldns:dst-dnsname"
+#define NETWORK_SRC "source-ipv4-network"
+#define NETWORK_DST "destination-ipv4-network"
 #define DIRECTION_INITIATED "ietf-mud:direction-initiated"
 
 #define PORT "port"
@@ -144,58 +146,59 @@
 //#define IETF_MY_CONTROLLER "ietf-mud:my-controller"
 #define IETF_MY_CONTROLLER "my-controller"
 
-typedef enum {UNKNOWN,ACLDNS,SAME_MANUFACTURER,CONTROLLER,MY_CONTROLLER,LOCAL_NETWORK} ACE_TYPE;
+typedef enum {UNKNOWN,ACLDNS,ACLNETWORK,SAME_MANUFACTURER,CONTROLLER,MY_CONTROLLER,LOCAL_NETWORK} ACE_TYPE;
 
 typedef struct {
-	ACE_TYPE aceType;
-	char *ruleName;
-	char *protocol;
-	char *dnsName;
-	char *lowerPort;
-	char *upperPort;
-	char *actionsForwarding;
-	char *directionInitiated;
+    ACE_TYPE aceType;
+    char *ruleName;
+    char *protocol;
+    char *dnsName;
+    char *ipv4Network;
+    char *lowerPort;
+    char *upperPort;
+    char *actionsForwarding;
+    char *directionInitiated;
 } AceEntry;
 
 typedef struct {
-	char *aclName;
-	char *aclType;
-	AceEntry aceList[MAX_ACES];
-	int aceCount;
+    char *aclName;
+    char *aclType;
+    AceEntry aceList[MAX_ACES];
+    int aceCount;
 } AclEntry;
 
 typedef struct {
-	char *aclName;
-	char *aclType;
+    char *aclName;
+    char *aclType;
 } MudAccessList;
 
 typedef struct {
-	char *description;
-	char *mudVersion;
-	char *mudUrl;
-	char *lastUpdate;
-	char *cacheValidity;
-	char *isSupported;
-	char *systeminfo;
-	char *mfgName;
-	char *modelName;
-	char *firmwareRev;
-	char *softwareRev;
-	char *extensions;
+    char *description;
+    char *mudVersion;
+    char *mudUrl;
+    char *lastUpdate;
+    char *cacheValidity;
+    char *isSupported;
+    char *systeminfo;
+    char *mfgName;
+    char *modelName;
+    char *firmwareRev;
+    char *softwareRev;
+    char *extensions;
 
-	MudAccessList toAccessList[MAX_DEVICE_POLICIES];
-	MudAccessList fromAccessList[MAX_DEVICE_POLICIES];
+    MudAccessList toAccessList[MAX_DEVICE_POLICIES];
+    MudAccessList fromAccessList[MAX_DEVICE_POLICIES];
     int toAccessListCount;
-	int fromAccessListCount;
+    int fromAccessListCount;
 
-	AclEntry acls[MAX_ACLS];
-	int aclListCount;
+    AclEntry acls[MAX_ACLS];
+    int aclListCount;
 } MudFileInfo;
 
 typedef struct {
-	char *domainName;
-	char *ipList[MAX_DNS_RESOLUTIONS];
-	int ipCount;
+    char *domainName;
+    char *ipList[MAX_DNS_RESOLUTIONS];
+    int ipCount;
 } DomainResolutions;
 
 int parse_mud_file(char *fullCommandLine);

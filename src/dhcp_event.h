@@ -19,18 +19,18 @@
 typedef enum {NONE,NEW,OLD,DEL} DHCP_ACTIONS;
 
 typedef struct {
-	char *date;
-	DHCP_ACTIONS action; /* NEW | OLD | DEL */
-	char *lanDevice;
-	char *macAddress;
-	char *ipAddress;
-	char *hostName;
-	char *dhcpRequestFlags;
-	char *dhcpVendor;
-	char *mudFileURL;
-	char *mudSigURL;
-	char *mudFileStorageLocation;
-	char *mudSigFileStorageLocation;
+    char *date;
+    DHCP_ACTIONS action; /* NEW | OLD | DEL */
+    char *lanDevice;
+    char *macAddress;
+    char *ipAddress;
+    char *hostName;
+    char *dhcpRequestFlags;
+    char *dhcpVendor;
+    char *mudFileURL;
+    char *mudSigURL;
+    char *mudFileStorageLocation;
+    char *mudSigFileStorageLocation;
 } DhcpEvent;
 
 void executeOpenMudDhcpAction(DhcpEvent *event);

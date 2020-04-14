@@ -32,7 +32,7 @@ define Package/osmud
   SECTION:=net
   CATEGORY:=Base system
   TITLE:=OpenWRT osmud
-  DEPENDS:=+libcurl +ca-bundle +libjson-c +openssl-util +ca-certificates
+  DEPENDS:=+libcurl +ca-bundle +libjson-c +openssl-util +ca-certificates +libpcap +libpthread +glib2
 #NEED TO ADD SOMETHING ABOUT osmud-dnsmasq and copy osmud-dnsmasq based on dnsmasq
 endef
 
@@ -53,7 +53,7 @@ endef
 define Build/Compile
 	$(MAKE) -C $(PKG_BUILD_DIR) \
 		CC="$(TARGET_CC)" \
-		CFLAGS="$(TARGET_CFLAGS)" \
+		CFLAGS="$(TARGET_CFLAGS) `pkg-config --cflags glib-2.0` `pkg-config --libs glib-2.0`" \
 #		CFLAGS="$(TARGET_CFLAGS) -Wall -g" \
 		LDFLAGS="$(TARGET_LDFLAGS)"
 endef
@@ -67,6 +67,7 @@ define Package/osmud/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/rollback_ip_fw_rules.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/create_ip_fw_rule.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/remove_ip_fw_rule.sh $(1)/etc/osmud
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/reorder_ip_fw_reject_all_rule.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/create_mud_db_entry.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/create_mud_db_entry.sh $(1)/etc/osmud
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dnsmasq/detect_new_device.sh $(1)/etc/osmud

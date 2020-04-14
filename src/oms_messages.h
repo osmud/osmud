@@ -17,17 +17,17 @@
 #define _OMS_MESSAGES
 
 typedef struct {
-	int messageIndex;
-	int severity;
-	char *messageText;
+    int messageIndex;
+    int severity;
+    char *messageText;
 } omsMessage;
 
 enum OMS_SEVERITY_CLASSES {
-	OMS_CRIT = 1,
-	OMS_ERROR = 2,
-	OMS_WARN = 3,
-	OMS_INFO = 4,
-	OMS_DEBUG = 5
+    OMS_CRIT = 1,
+    OMS_ERROR = 2,
+    OMS_WARN = 3,
+    OMS_INFO = 4,
+    OMS_DEBUG = 5
 };
 
 // Allow the caller to identify the OMS subsystem when creating a message
@@ -36,11 +36,14 @@ enum OMS_SUBSYSTEM_CLASSES {
  OMS_SUBSYS_CONTROLLER,
  OMS_SUBSYS_COMMUNICATION,
  OMS_SUBSYS_MUD_FILE,
- OMS_SUBSYS_DEVICE_INTERFACE
+ OMS_SUBSYS_DEVICE_INTERFACE,
+ OMS_SUBSYS_SNIFFER,
+ OMS_SUBSYS_DNSD,
+ OMS_SUBSYS_DNSR
 };
 
 void logOmsMessage(int severity, int omsSubsystem, int msgId);
-void logOmsGeneralMessage(int severity, int omsSubsystem, char *messageText);
+void logOmsGeneralMessage(int severity, int omsSubsystem, char *message_fmt, ...);
 void setOmsLogger(FILE *loggerFd);
 void setLoggingLevel(int logLevel);
 int getLogLevelFromArg(char *logLevel);

@@ -31,7 +31,7 @@ safe_malloc(unsigned n)
 {
     /* this will call malloc and exit with error if malloc returns 0 */
 
-	char *t;
+    char *t;
 
     if (n)
     {
@@ -72,18 +72,18 @@ strcmpi(const char s1[], const char s2[])
    as s1 is >, ==, or < s2.  case is
    NOT taken into account */
 
-	int diff, i;
-	char c1, c2;
+    int diff, i;
+    char c1, c2;
 
-	i = 0;
-	do
-	{
-			c1 = islower(s1[i]) ? toupper(s1[i]) : s1[i];
-			c2 = islower(s2[i]) ? toupper(s2[i]) : s2[i];
-			diff = c1 - c2;
-			i++;
-	} while (s1[i - 1] && s2[i - 1] && !diff);
-	return diff;
+    i = 0;
+    do
+    {
+            c1 = islower(s1[i]) ? toupper(s1[i]) : s1[i];
+            c2 = islower(s2[i]) ? toupper(s2[i]) : s2[i];
+            diff = c1 - c2;
+            i++;
+    } while (s1[i - 1] && s2[i - 1] && !diff);
+    return diff;
 }
 
 int
@@ -218,62 +218,62 @@ int
 run_command(char **args)
 /* args must point to valid memory, terminated with 0 sentinal */
 {
-	int errorcode = 0;
-	pid_t pid;
+    int errorcode = 0;
+    pid_t pid;
 
-	if ((pid = fork()) == 0) {
-		execvp(args[0],args+1);
-	}
-	else if (pid == -1)
-	{
-		errorcode = 1;
-	}
-	else
-	{
-		while (wait(&errorcode) != pid);   /* wait for the appropriate child */
-	}
+    if ((pid = fork()) == 0) {
+        execvp(args[0],args+1);
+    }
+    else if (pid == -1)
+    {
+        errorcode = 1;
+    }
+    else
+    {
+        while (wait(&errorcode) != pid);   /* wait for the appropriate child */
+    }
 
-	return errorcode;
+    return errorcode;
 }
 
 int
 run_command_with_output_logged(char *fullCommandLine)
 {
-	int errorcode = 0;
-	int fd[2];
-	pipe(fd);
-	pid_t childpid;
+    int errorcode = 0;
+    int fd[2];
+    pipe(fd);
+    pid_t childpid;
 
-	int RESULT_SIZE = 10000;
-	char result[RESULT_SIZE]; // TODO: Do this better
+    int RESULT_SIZE = 10000;
+    char result[RESULT_SIZE]; // TODO: Do this better
 
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, fullCommandLine);
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, fullCommandLine);
 
-	// TODO: Don't actually run the command just yet.... just return success
-	return 0;
+    // TODO: Don't actually run the command just yet.... just return success
+    return 0;
 
-	if ((childpid = fork()) == 0) {
-		logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, "....Execing");
-		dup2(fd[1], 1);
-		close(fd[0]);
-		execlp("/bin/sh", "/bin/sh", "-c", fullCommandLine, NULL);
-	}
-	else if (childpid == -1)
-	{
-		errorcode = 1; /* fork failed */
-	}
-	else
-	{
-		while (wait(&errorcode) != childpid);   /* wait for the appropriate child */
+    if ((childpid = fork()) == 0) {
+        logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, "....Execing");
+        dup2(fd[1], 1);
+        close(fd[0]);
+        execlp("/bin/sh", "/bin/sh", "-c", fullCommandLine, NULL);
+    }
+    else if (childpid == -1)
+    {
+        errorcode = 1; /* fork failed */
+    }
+    else
+    {
+        while (wait(&errorcode) != childpid);   /* wait for the appropriate child */
 
-		read(fd[0], result, RESULT_SIZE);
+        read(fd[0], result, RESULT_SIZE);
 
-		logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, result);
-	}
+        logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, result);
+    }
 
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, "Returning after done");
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, "Returning after done");
 
-	return errorcode;
+    return errorcode;
 }
 
 /*
@@ -284,28 +284,28 @@ run_command_with_output_logged(char *fullCommandLine)
  */
 int mkdir_path(char *path)
 {
-	int result = 0;
-	char *sep = strrchr(path, '/' );
+    int result = 0;
+    char *sep = strrchr(path, '/' );
 
-	if(sep != NULL) {
-		*sep = 0;
-		if ((result = mkdir_path(path))) {
-			/* There was a problem making the path - stop and return error */
-			return 1;
-		}
-		*sep = '/';
-	}
+    if(sep != NULL) {
+        *sep = 0;
+        if ((result = mkdir_path(path))) {
+            /* There was a problem making the path - stop and return error */
+            return 1;
+        }
+        *sep = '/';
+    }
 
-	if (*path) {
-		if( mkdir(path,0755) && errno != EEXIST ) {
-			return 1;
-		} else {
-			return 0;
-		}
-	}
-	/* else, a null path does not cause an error - it's skipped */
+    if (*path) {
+        if( mkdir(path,0755) && errno != EEXIST ) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    /* else, a null path does not cause an error - it's skipped */
 
-	return 0;
+    return 0;
 }
 
 /*
@@ -318,14 +318,14 @@ FILE *fopen_with_path(char *path, char *mode)
     int result = 0;
 
     if (sep) {
-		char *path_t = strdup(path);
-		path_t[sep - path] = 0;
-		result = mkdir_path(path_t);
-		safe_free(path_t);
+        char *path_t = strdup(path);
+        path_t[sep - path] = 0;
+        result = mkdir_path(path_t);
+        safe_free(path_t);
     }
 
     if (!result)
-    	return fopen(path, mode);
+        return fopen(path, mode);
     else
-    	return (FILE *)0;
+        return (FILE *)0;
 }

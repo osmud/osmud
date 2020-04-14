@@ -42,156 +42,204 @@
 
 char *getProtocolName(const char *protocolNumber)
 {
-	if (!protocolNumber)
-		return "all";
+    if (!protocolNumber)
+        return "all";
 
-	if (!strcmp(protocolNumber, "all")) {
-		return "all";
-	} else if (!strcmp(protocolNumber, "6")) {
-		return "tcp";
-	} else if (!strcmp(protocolNumber, "17")) {
-		return "udp";
-	} else {
-		return "none";
-	}
+    if (!strcmp(protocolNumber, "all")) {
+        return "all";
+    } else if (!strcmp(protocolNumber, "6")) {
+        return "tcp";
+    } else if (!strcmp(protocolNumber, "17")) {
+        return "udp";
+    } else {
+        return "none";
+    }
 }
 
 char *getActionString(const char *mudAction)
 {
-	if (!strcmpi(mudAction, "reject")) {
-		return "REJECT";
-	} else if (!strcmpi(mudAction, "accept")) {
-		return "ACCEPT";
-	} else {
-		return "DENY";
-	}
+    if (!strcmpi(mudAction, "reject")) {
+        return "REJECT";
+    } else if (!strcmpi(mudAction, "accept")) {
+        return "ACCEPT";
+    } else {
+        return "DROP";
+    }
 }
 
 char *getProtocolFamily(const char *aclType)
 {
-	if (!aclType)
-		return "all";
+    if (!aclType)
+        return "all";
 
-	if (!strcmpi(aclType, "all")) {
-		return "all";
-	} else if (!strcmpi(aclType, "ipv6-acl")) {
-		return "ipv6";
-	} else {
-		return "ipv4";
-	}
+    if (!strcmpi(aclType, "all")) {
+        return "all";
+    } else if (!strcmpi(aclType, "ipv6-acl")) {
+        return "ipv6";
+    } else {
+        return "ipv4";
+    }
 }
 
 int installFirewallIPRule(char *srcIp, char *destIp, char *destPort, char *srcDevice,
-		char *destDevice, char *protocol, char *ruleName, char *fwAction, char *aclType,
-		char *hostName)
+        char *destDevice, char *protocol, char *ruleName, char *fwAction, char *aclType,
+        char *hostName)
 {
-	char execBuf[BUFSIZE];
-	int retval;
+    char execBuf[BUFSIZE];
+    int retval;
 
-	/* TODO: We need to turn srcDevice and destDevice into the real values on the router */
-	/*       by default they are "lan" and "wan" but can be changed. You can find this   */
-	/*       with command "uci show dhcp.lan.interface" ==> dhcp.lan.interface='lan'     */
-	/*       We should update the script to pull this value from UCI                     */
-	/*       EX: uci show dhcp.lan.interface | awk -F = '{print $2}'                     */
-	/* NOTE: Currently we are not restricting by source-port. If needed, add this as an arg */
-	snprintf(execBuf, BUFSIZE, "%s -s %s -d %s -i %s -a any -j %s -b %s -p %s -n %s -t %s -f %s -c %s", UCI_FIREWALL_SCRIPT, srcDevice, destDevice, srcIp,
-			destIp, destPort, getProtocolName(protocol),
-			ruleName,
-			getActionString(fwAction),
-			getProtocolFamily(aclType),
-			hostName);
-	execBuf[BUFSIZE-1] = '\0';
+    /* TODO: We need to turn srcDevice and destDevice into the real values on the router */
+    /*       by default they are "lan" and "wan" but can be changed. You can find this   */
+    /*       with command "uci show dhcp.lan.interface" ==> dhcp.lan.interface='lan'     */
+    /*       We should update the script to pull this value from UCI                     */
+    /*       EX: uci show dhcp.lan.interface | awk -F = '{print $2}'                     */
+    /* NOTE: Currently we are not restricting by source-port. If needed, add this as an arg */
+    snprintf(execBuf, BUFSIZE, "%s -s %s -d %s -i %s -a any -j %s -b %s -p %s -n %s -t %s -f %s -c %s", UCI_FIREWALL_SCRIPT, srcDevice, destDevice, srcIp,
+            destIp, destPort, getProtocolName(protocol),
+            ruleName,
+            getActionString(fwAction),
+            getProtocolFamily(aclType),
+            hostName);
+    execBuf[BUFSIZE-1] = '\0';
 
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
-	retval = system(execBuf);
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+    retval = system(execBuf);
 
-	if (retval) {
-		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
-	}
-	return retval;
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
+    }
+    return retval;
+}
+
+int installFirewallIPRulePortRange(char *srcIp, char *destIp, char *lowerPort, char *upperPort, char *srcDevice,
+        char *destDevice, char *protocol, char *ruleName, char *fwAction, char *aclType,
+        char *hostName)
+{
+    char execBuf[BUFSIZE];
+    int retval;
+
+    /* TODO: We need to turn srcDevice and destDevice into the real values on the router */
+    /*       by default they are "lan" and "wan" but can be changed. You can find this   */
+    /*       with command "uci show dhcp.lan.interface" ==> dhcp.lan.interface='lan'     */
+    /*       We should update the script to pull this value from UCI                     */
+    /*       EX: uci show dhcp.lan.interface | awk -F = '{print $2}'                     */
+    /* NOTE: Currently we are not restricting by source-port. If needed, add this as an arg */
+    snprintf(execBuf, BUFSIZE, "%s -s %s -d %s -i %s -a any -j %s -b %s:%s -p %s -n %s -t %s -f %s -c %s", UCI_FIREWALL_SCRIPT, srcDevice, destDevice, srcIp,
+            destIp, lowerPort, upperPort, getProtocolName(protocol),
+            ruleName,
+            getActionString(fwAction),
+            getProtocolFamily(aclType),
+            hostName);
+    execBuf[BUFSIZE-1] = '\0';
+
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+    retval = system(execBuf);
+
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
+    }
+    return retval;
 }
 
 int commitAndApplyFirewallRules()
 {
-	int retval;
+    int retval;
 
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, UCI_FIREWALL_COMMIT_SCRIPT);
-	retval = system(UCI_FIREWALL_COMMIT_SCRIPT);
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, UCI_FIREWALL_COMMIT_SCRIPT);
+    retval = system(UCI_FIREWALL_COMMIT_SCRIPT);
 
-	if (retval) {
-		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, UCI_FIREWALL_COMMIT_SCRIPT);
-	}
-	return retval;
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, UCI_FIREWALL_COMMIT_SCRIPT);
+    }
+    return retval;
 }
 
 int rollbackFirewallConfiguration()
 {
-	int retval;
+    int retval;
 
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, UCI_FIREWALL_ROLLBACK_SCRIPT);
-	retval = system(UCI_FIREWALL_ROLLBACK_SCRIPT);
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, UCI_FIREWALL_ROLLBACK_SCRIPT);
+    retval = system(UCI_FIREWALL_ROLLBACK_SCRIPT);
 
-	if (retval) {
-		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, UCI_FIREWALL_ROLLBACK_SCRIPT);
-	}
-	return retval;
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, UCI_FIREWALL_ROLLBACK_SCRIPT);
+    }
+    return retval;
 }
 
 int removeFirewallIPRule(char *ipAddr, char *macAddress)
 {
-	char execBuf[BUFSIZE];
-	int retval;
+    char execBuf[BUFSIZE];
+    int retval;
 
-	snprintf(execBuf, BUFSIZE, "%s -i %s -m %s", UCI_FIREWALL_REMOVE_SCRIPT, ipAddr, macAddress);
-	execBuf[BUFSIZE-1] = '\0';
+    snprintf(execBuf, BUFSIZE, "%s -i %s -m %s", UCI_FIREWALL_REMOVE_SCRIPT, ipAddr, macAddress);
+    execBuf[BUFSIZE-1] = '\0';
 
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
-	retval = system(execBuf);
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+    retval = system(execBuf);
 
-	if (retval) {
-		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
-	}
-	return retval;
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
+    }
+    return retval;
+
+}
+
+int reorderFirewallRejectAllIPRule(char *ipAddr)
+{
+    char execBuf[BUFSIZE];
+    int retval;
+
+    snprintf(execBuf, BUFSIZE, "%s -i %s", UCI_FIREWALL_REORDER_REJECT_SCRIPT, ipAddr);
+    execBuf[BUFSIZE-1] = '\0';
+
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+    retval = system(execBuf);
+
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
+    }
+    return retval;
 
 }
 
 int installMudDbDeviceEntry(char *mudDbDir, char *ipAddr, char *macAddress, char *mudUrl, char *mudLocalFile, char *hostName)
 {
-	char execBuf[BUFSIZE];
-	int retval;
+    char execBuf[BUFSIZE];
+    int retval;
 
-	snprintf(execBuf, BUFSIZE, "%s -d %s%s -i %s -m %s -c %s -u %s -f %s", MUD_DB_CREATE_SCRIPT, mudDbDir, MUD_STATE_FILE, ipAddr,
-			macAddress,
-			(hostName?hostName:"-"),
-			(mudUrl?mudUrl:"-"),
-			(mudLocalFile?mudLocalFile:"-"));
-	execBuf[BUFSIZE-1] = '\0';
+    snprintf(execBuf, BUFSIZE, "%s -d %s%s -i %s -m %s -c %s -u %s -f %s", MUD_DB_CREATE_SCRIPT, mudDbDir, MUD_STATE_FILE, ipAddr,
+            macAddress,
+            (hostName?hostName:"-"),
+            (mudUrl?mudUrl:"-"),
+            (mudLocalFile?mudLocalFile:"-"));
+    execBuf[BUFSIZE-1] = '\0';
 
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
-	retval = system(execBuf);
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+    retval = system(execBuf);
 
-	if (retval) {
-		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
-	}
-	return retval;
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
+    }
+    return retval;
 }
 
 int removeMudDbDeviceEntry(char *mudDbDir, char *ipAddr, char *macAddress)
 {
-	char execBuf[BUFSIZE];
-	int retval;
+    char execBuf[BUFSIZE];
+    int retval;
 
-	snprintf(execBuf, BUFSIZE, "%s -d %s/%s -i %s -m %s", MUD_DB_REMOVE_SCRIPT, mudDbDir, MUD_STATE_FILE, ipAddr, macAddress);
-	execBuf[BUFSIZE-1] = '\0';
+    snprintf(execBuf, BUFSIZE, "%s -d %s/%s -i %s -m %s", MUD_DB_REMOVE_SCRIPT, mudDbDir, MUD_STATE_FILE, ipAddr, macAddress);
+    execBuf[BUFSIZE-1] = '\0';
 
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
-	retval = system(execBuf);
-	/* retval = run_command_with_output_logged(execBuf); */
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+    retval = system(execBuf);
+    /* retval = run_command_with_output_logged(execBuf); */
 
-	if (retval) {
-		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
-	}
-	return retval;
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
+    }
+    return retval;
 }
 
 
@@ -200,11 +248,11 @@ int removeMudDbDeviceEntry(char *mudDbDir, char *ipAddr, char *macAddress)
 // Appends a DNS entry to the DNS whitelist
 int installDnsRule(char *targetDomainName, char *srcIpAddr, char *srcMacAddr, char *srcHostName, char *dnsFileNameWithPath)
 {
-	FILE *fp= NULL;
-	int retval = 0;
-	fp = fopen (dnsFileNameWithPath, "a");
+    FILE *fp= NULL;
+    int retval = 0;
+    fp = fopen (dnsFileNameWithPath, "a");
 
-	if (fp != NULL)
+    if (fp != NULL)
         {
             fprintf(fp, "%s %s %s %s\n", targetDomainName, srcHostName, srcIpAddr, srcMacAddr);
 
@@ -212,12 +260,12 @@ int installDnsRule(char *targetDomainName, char *srcIpAddr, char *srcMacAddr, ch
             fclose(fp);
         }
         else
-	{
+    {
             logOmsGeneralMessage(OMS_CRIT, OMS_SUBSYS_DEVICE_INTERFACE, "Could not write DNS rule to file.");
             retval = 1;
-	}
+    }
 
-	return retval;
+    return retval;
 }
 
 
@@ -225,32 +273,32 @@ int installDnsRule(char *targetDomainName, char *srcIpAddr, char *srcMacAddr, ch
 int removeDnsRule(char *targetDomainName, char *srcIpAddr, char *srcMacAddr, char *dnsFileNameWithPath)
 {
 
-	return 0;
+    return 0;
 }
 
 int verifyCmsSignature(char *mudFileLocation, char *mudSigFileLocation)
 {
-	/* openssl cms -verify -in mudfile.p7s -inform DER -content badtxt */
+    /* openssl cms -verify -in mudfile.p7s -inform DER -content badtxt */
 
-	char execBuf[BUFSIZE];
-	int retval, sigStatus;
+    char execBuf[BUFSIZE];
+    int retval, sigStatus;
 
-	snprintf(execBuf, BUFSIZE, "openssl cms -verify -in %s -inform DER -content %s -purpose any", mudSigFileLocation, mudFileLocation);
-	execBuf[BUFSIZE-1] = '\0';
+    snprintf(execBuf, BUFSIZE, "openssl cms -verify -in %s -inform DER -content %s -purpose any", mudSigFileLocation, mudFileLocation);
+    execBuf[BUFSIZE-1] = '\0';
 
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
-	retval = system(execBuf);
+    logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+    retval = system(execBuf);
 
-	/* A non-zero return value indicates the signature on the mud file was invalid */
-	if (retval) {
-		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
-		sigStatus = INVALID_MUD_FILE_SIG;
-	}
-	else {
-		sigStatus = VALID_MUD_FILE_SIG;
-	}
+    /* A non-zero return value indicates the signature on the mud file was invalid */
+    if (retval) {
+        logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
+        sigStatus = INVALID_MUD_FILE_SIG;
+    }
+    else {
+        sigStatus = VALID_MUD_FILE_SIG;
+    }
 
-	return sigStatus;
+    return sigStatus;
 
 }
 
@@ -260,6 +308,6 @@ int verifyCmsSignature(char *mudFileLocation, char *mudSigFileLocation)
  */
 int createMudfileStorage(char *mudFileDataLocationInfo)
 {
-	return mkdir_path(mudFileDataLocationInfo);
+    return mkdir_path(mudFileDataLocationInfo);
 }
 
