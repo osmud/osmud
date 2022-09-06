@@ -45,13 +45,13 @@ This process sets up the OpenWRT build environment in a docker image to build th
 
 ### 1. Build OpenWRT
 
-For building OpenWRT have a look at [this file](https://github.com/osmud/osmud/BuildAndInstall-OpenWRT.md#Create-Docker-OpenWRT-build-image).
+For building OpenWRT have a look at the building instruction stored in `BuildAndInstall-OpenWRT.md`.
 
 ### 2. Build osMUD-dnsmasq in OpenWRT
 
 **Note**: Skip osmud-dnsmasq instructions until we have made the change for dnsmasq to read the DHCP MUD header option.
 
-To build the integration among osMUD and dnsmasq follow the instruction in [this other file](https://github.com/osmud/osmud/BuildAndInstall-dnsmasq.md#Build-osMUD-dnsmasq-in-OpenWRT)
+To build the integration among osMUD and dnsmasq follow the building instruction stored in  `BuildAndInstall-dnsmasq.md`.
 
 ### 3. Build osmud for OpenWRT
 
@@ -79,8 +79,7 @@ This builds osMUD to be something like `bin/packages/x86_64/base/osmud_0.2.0-1_x
 
 ### Install OpenWRT
 
-For installing OpenWRT have a look at [this file]
-(https://github.com/osmud/osmud/wiki/BuildAndInstall-OpenWRT.md#install-openwrt-on-the-router)
+For installing OpenWRT have a look at the installing instruction stored in `BuildAndInstall-OpenWRT.md`.
 
 **Note**: installing OpenWRT is not necessary if you want to use a [dockerized version of OpenWRT](https://github.com/openwrt/docker)
 
@@ -88,7 +87,7 @@ For installing OpenWRT have a look at [this file]
 
 **Note: Skip osmud-dnsmasq instructions until we have made the change for dnsmasq to read the DHCP MUD header option.**
 
-To install the integration among osMUD and dnsmasq follow the [instructions stored here](https://github.com/osmud/osmud/BuildAndInstall-dnsmasq.md#install-osmud-dnsmasq-on-the-router)
+To install the integration among osMUD and dnsmasq follow the installing instruction stored in `BuildAndInstall-dnsmasq.md`.
 
 ### Install osMUD
 
