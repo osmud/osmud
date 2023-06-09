@@ -68,7 +68,7 @@ int buildPortRange(char *portBuf, int portBufSize, AceEntry *ace)
 	else if (ace->upperPort == NULL)
 		snprintf(portBuf, portBufSize, "any");
 	else
-		snprintf(portBuf, portBufSize, "%s:%s", ace->lowerPort, ace->upperPort);
+		snprintf(portBuf, portBufSize, "%s-%s", ace->lowerPort, ace->upperPort);
 	portBuf[portBufSize-1] = '\0';
 
 	return retval;
