@@ -62,7 +62,13 @@ int buildPortRange(char *portBuf, int portBufSize, AceEntry *ace)
 {
 	int retval = 0; /* Return > 0 if there is an error with port assignments */
 
-	snprintf(portBuf, portBufSize, "%s:%s", ace->lowerPort, ace->upperPort);
+	// It is necessary to verify if port range is specified. If not "any" will be used.
+	if (ace->lowerPort == NULL)
+		snprintf(portBuf, portBufSize, "any");
+	else if (ace->upperPort == NULL)
+		snprintf(portBuf, portBufSize, "any");
+	else
+		snprintf(portBuf, portBufSize, "%s-%s", ace->lowerPort, ace->upperPort);
 	portBuf[portBufSize-1] = '\0';
 
 	return retval;
