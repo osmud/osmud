@@ -63,7 +63,7 @@ char *getActionString(const char *mudAction)
 	} else if (!strcmpi(mudAction, "accept")) {
 		return "ACCEPT";
 	} else {
-		return "DENY";
+		return "DROP";
 	}
 }
 

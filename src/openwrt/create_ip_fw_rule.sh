@@ -81,7 +81,7 @@ while getopts 'ht:p:s:i:a:d:j:b:n:f:c:' option; do
 done
 
 if [[ -z "${TARGET/ //}" ]]; then
-    echo -e "ERROR: Plese specify target firewall action [ACCEPT|REJECT|DENY]!\n"
+    echo -e "ERROR: Plese specify target firewall action [ACCEPT|REJECT|DROP]!\n"
     exit 1
 fi
 
