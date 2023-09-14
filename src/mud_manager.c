@@ -35,6 +35,12 @@
 #include "mud_manager.h"
 #include "mudparser.h"
 
+#define PORT_BUF_SIZE 512
+
+// Just for logging purposes
+#define LOG_MSG_BUF_LEN 4096
+char myLogMessage[LOG_MSG_BUF_LEN];
+
 extern char *dnsWhiteListFile;
 extern int noFailOnMudValidation;
 
@@ -68,7 +74,6 @@ int buildPortRange(char *portBuf, int portBufSize, AceEntry *ace)
 	return retval;
 }
 
-#define PORT_BUF_SIZE 512
 
 int processFromAccess(char *aclName, char *aclType, AclEntry *acl, DhcpEvent *event) {
 	int retval = 0;
@@ -180,14 +185,13 @@ int executeMudWithDhcpContext(DhcpEvent *dhcpEvent)
 
 	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, "IN ****NEW**** executeMudWithDhcpContext()");
 
-
 	/* TODO: We need to check the return code - if this fails, we won't be able to understand the state of the device over time */
 	installMudDbDeviceEntry(mudFileDataDirectory, dhcpEvent->ipAddress, dhcpEvent->macAddress,
 			dhcpEvent->mudFileURL, dhcpEvent->mudFileStorageLocation, dhcpEvent->hostName);
 
 	MudFileInfo *mudFile = parseMudFile(dhcpEvent->mudFileStorageLocation);
 
-	// Loop over mud file and carry out actions
+	// Loop over MUD file and carry out actions
 	if (mudFile) {
 			// First, remove any prior entry for this device in case a NEW event happens for an existing configured device
 			removeFirewallIPRule(dhcpEvent->ipAddress, dhcpEvent->macAddress);
@@ -249,71 +253,95 @@ int executeMudWithDhcpContext(DhcpEvent *dhcpEvent)
 	return retval;
 }
 
+int enforceMudPolicies(DhcpEvent *dhcpEvent)
+{
+	int validSignature = INVALID_MUD_FILE_SIG;
+	int returnValue = 0;
+
+	dhcpEvent->mudSigURL = createSigUrlFromMudUrl(dhcpEvent->mudFileURL);
+	dhcpEvent->mudFileStorageLocation = createStorageLocation(dhcpEvent->mudFileURL);
+	dhcpEvent->mudSigFileStorageLocation = createStorageLocation(dhcpEvent->mudSigURL);
+
+	snprintf(myLogMessage, LOG_MSG_BUF_LEN, "EXTRA: The <mudURL> is %s", dhcpEvent->mudFileURL);
+	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, myLogMessage);
+	snprintf(myLogMessage, LOG_MSG_BUF_LEN, "EXTRA: The <sigURL> is %s", dhcpEvent->mudSigURL);
+	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, myLogMessage);
+
+	/*
+	 * We are processing a MUD aware device. Go to the MUD file server and get the usage description
+	 * non-zero return code indicates error during communications
+	 * MUD files and signature files are stored in their computed storage locations for future reference
+	 */
+	if (!getOpenMudFile(dhcpEvent->mudFileURL, dhcpEvent->mudFileStorageLocation))
+	{
+		/*
+		 * For debugging purposes only, allow the p7s verification to be optional when the "-i" option
+		 * is provided. This feature will be removed from a future release and is only provided now
+		 * until certificates compatible with OPENSSL CMS VERIFY commands are in ready use.
+		 */
+		if ((!getOpenMudFile(dhcpEvent->mudSigURL, dhcpEvent->mudSigFileStorageLocation))
+			|| (noFailOnMudValidation))
+		{
+			logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_MUD_FILE, "IN ****NEW**** MUD and SIG files RETRIEVED!!!");
+			validSignature = validateMudFileWithSig(dhcpEvent);
+			if ((validSignature == VALID_MUD_FILE_SIG) || (noFailOnMudValidation))
+			{	/*
+				 * All files downloaded and signature valid.
+				 * CALL INTERFACE TO CARRY OUT MUD ACTION HERE
+				 */
+				returnValue = executeMudWithDhcpContext(dhcpEvent);
+				returnValue = installMudDbDeviceEntry(mudFileDataDirectory, dhcpEvent->ipAddress, dhcpEvent->macAddress,
+						dhcpEvent->mudFileURL, dhcpEvent->mudFileStorageLocation, dhcpEvent->hostName);
+				return returnValue;
+			}
+			else
+			{
+				logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_MUD_FILE, "ERROR: BAD SIGNATURE - FAILED VALIDATION!!!");
+				snprintf(myLogMessage, LOG_MSG_BUF_LEN, "EXTRA: noFailOnMudValidation: %d --- validSignature: %d", noFailOnMudValidation, validSignature);
+				logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_GENERAL, myLogMessage);
+				return -3;
+			}
+		}
+		else
+		{
+			logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_MUD_FILE, "ERROR: NO SIG FILE RETRIEVED!!!");
+			return -2;
+		}
+	}
+	else
+	{
+		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_MUD_FILE, "ERROR: NO MUD FILE RETRIEVED!!!");
+		return -1;
+	}
+}
+
 /*
  * This takes a DHCP event and performs the following:
  * 1) Validates the MUD file (maybe via yanglint when spec is finalized)
  * 2) parses the MUD file into a OSMUD data structure representing the MUD file
- * 3) Calls the device specific implementations to implement the features in the mud file
+ * 3) Calls the device specific implementations to implement the features in the MUD file
  */
-void executeNewDhcpAction(DhcpEvent *dhcpEvent)
+int executeNewDhcpAction(DhcpEvent *dhcpEvent)
 {
-	char logMsgBuf[4096];
+	char logMsgBuf[LOG_MSG_BUF_LEN];
+	int returnValue = -111;  // Setting a return value not returned from the called function
+
 	buildDhcpEventContext(logMsgBuf, "NEW", dhcpEvent);
 	logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_GENERAL, logMsgBuf);
 
 	if ((dhcpEvent) && (dhcpEvent->mudFileURL))
 	{
-		dhcpEvent->mudSigURL = createSigUrlFromMudUrl(dhcpEvent->mudFileURL);
-		dhcpEvent->mudFileStorageLocation = createStorageLocation(dhcpEvent->mudFileURL);
-		dhcpEvent->mudSigFileStorageLocation = createStorageLocation(dhcpEvent->mudSigURL);
-
-		/* We are processing a MUD aware device. Go to the MUD file server and get the usage description */
-		/* non-zero return code indicates error during communications */
-		/* Mud files and signature files are stored in their computed storage locations for future reference */
-		if (!getOpenMudFile(dhcpEvent->mudFileURL, dhcpEvent->mudFileStorageLocation))
-		{
-			/* For debugging purposes only, allow the p7s verification to be optional when the "-i" option
-			 * is provided. This feature will be removed from a future release and is only provided now
-			 * until certificates compatible with OPENSSL CMS VERIFY commands are in ready use.
-			 */
-			if ((!getOpenMudFile(dhcpEvent->mudSigURL, dhcpEvent->mudSigFileStorageLocation))
-				|| (noFailOnMudValidation))
-			{
-
-				logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_MUD_FILE, "IN ****NEW**** MUD and SIG FILE RETRIEVED!!!");
-
-				if ((validateMudFileWithSig(dhcpEvent) == VALID_MUD_FILE_SIG)
-					|| (noFailOnMudValidation))
-				{
-					/*
-					 * All files downloaded and signature valid.
-					 * CALL INTERFACE TO CARRY OUT MUD ACTION HERE
-					 */
-					executeMudWithDhcpContext(dhcpEvent);
-					installMudDbDeviceEntry(mudFileDataDirectory, dhcpEvent->ipAddress, dhcpEvent->macAddress,
-							dhcpEvent->mudFileURL, dhcpEvent->mudFileStorageLocation, dhcpEvent->hostName);
-				}
-				else
-				{
-					logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_MUD_FILE, "ERROR: ****NEW**** BAD SIGNATURE - FAILED VALIDATION!!!");
-				}
-			}
-			else
-			{
-				logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_MUD_FILE, "ERROR: ****NEW**** NO SIG FILE RETRIEVED!!!");
-			}
-		}
-		else
-		{
-			logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_MUD_FILE, "ERROR: ****NEW**** NO MUD FILE RETRIEVED!!!");
-		}
+		/* Processing a MUD aware device. */
+		returnValue = enforceMudPolicies(dhcpEvent);
+		return returnValue;
 	}
 	else
 	{
 		/* This is a legacy non-MUD aware device. */
-		logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_MUD_FILE, "IN ****NEW**** LEGACY DEVICE -- no mud file declared.");
+		logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_MUD_FILE, "IN ****NEW**** LEGACY DEVICE -- no MUD file declared.");
 		doDhcpLegacyAction(dhcpEvent);
 		installMudDbDeviceEntry(mudFileDataDirectory, dhcpEvent->ipAddress, dhcpEvent->macAddress, NULL, NULL, dhcpEvent->hostName);
+		return 0;
 	}
 }
 
@@ -332,7 +360,7 @@ void executeOldDhcpAction(DhcpEvent *dhcpEvent)
 
 void executeDelDhcpAction(DhcpEvent *dhcpEvent)
 {
-	char logMsgBuf[4096];
+	char logMsgBuf[LOG_MSG_BUF_LEN];
 	buildDhcpEventContext(logMsgBuf, "DEL", dhcpEvent);
 	logOmsGeneralMessage(OMS_INFO, OMS_SUBSYS_GENERAL, logMsgBuf);
 
@@ -345,8 +373,7 @@ void executeDelDhcpAction(DhcpEvent *dhcpEvent)
 }
 
 
-void
-executeOpenMudDhcpAction(DhcpEvent *dhcpEvent)
+void executeOpenMudDhcpAction(DhcpEvent *dhcpEvent)
 {
 	if (dhcpEvent) {
 		switch (dhcpEvent->action) {
