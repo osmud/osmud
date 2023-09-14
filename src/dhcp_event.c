@@ -77,7 +77,7 @@ void doDhcpLegacyAction(DhcpEvent *dhcpEvent)
 
 int validateMudFileWithSig(DhcpEvent *dhcpEvent)
 {
-	int validSig = -1; /* Indicates invalid signature. 0 = valid sig, non-zero is specific signature validation error */
+	int validSig = INVALID_MUD_FILE_SIG; /* Indicates invalid signature. 0 = valid sig, non-zero is specific signature validation error */
 
 	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, "IN ****NEW**** validateMudFileWithSig()");
 

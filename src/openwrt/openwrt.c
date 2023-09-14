@@ -233,18 +233,24 @@ int verifyCmsSignature(char *mudFileLocation, char *mudSigFileLocation)
 	/* openssl cms -verify -in mudfile.p7s -inform DER -content badtxt */
 
 	char execBuf[BUFSIZE];
+	char logMessage[BUFSIZE];
 	int retval, sigStatus;
-
-	snprintf(execBuf, BUFSIZE, "openssl cms -verify -in %s -inform DER -content %s -purpose any", mudSigFileLocation, mudFileLocation);
+	
+	snprintf(execBuf, BUFSIZE, "openssl cms -verify -in %s -inform DER -content %s -purpose any &> /var/log/last_mud_signature_verification.txt", mudSigFileLocation, mudFileLocation);
 	execBuf[BUFSIZE-1] = '\0';
-
-	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);
+	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, execBuf);  // printing the verification command for debug purposes
 	retval = system(execBuf);
-
+	snprintf(logMessage, BUFSIZE, "EXTRA:: Signature verification returns %d", retval);  // printing system return value
+	logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_GENERAL, logMessage);
+	
 	/* A non-zero return value indicates the signature on the mud file was invalid */
 	if (retval) {
 		logOmsGeneralMessage(OMS_ERROR, OMS_SUBSYS_DEVICE_INTERFACE, execBuf);
 		sigStatus = INVALID_MUD_FILE_SIG;
+
+		retval = WEXITSTATUS(retval);  // To extract system real exit value is necessary to use this macro.
+		snprintf(logMessage, BUFSIZE, "EXTRA:: Signature failed: %d", retval);
+		logOmsGeneralMessage(OMS_DEBUG, OMS_SUBSYS_MUD_FILE, logMessage);
 	}
 	else {
 		sigStatus = VALID_MUD_FILE_SIG;
